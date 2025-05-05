@@ -6,3 +6,4 @@ js/head.json
 js/partial_fig.json
 js/poses.json
 old-files/*
+.DS_Store

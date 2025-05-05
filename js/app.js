@@ -43,6 +43,9 @@ function initApp() {
   // Set initial pose data (sample data from DataLoader before user uploads)
   appState.poseData = appState.dataLoader.sampleData;
 
+  // appState.poseData = appState.dataLoader.loadFromFile(
+  //   "../data/full-size-detected.json"
+  // );
   // Set up event listeners
   setupEventListeners();
 

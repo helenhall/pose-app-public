@@ -8,6 +8,7 @@ const appState = {
   dataLoader: null,
   poseMatcher: null,
   poseData: [],
+  basepath: null,
   similarPoses: [],
   sensitivityThreshold: 0.7,
   maxResults: 10,
@@ -24,7 +25,10 @@ const elements = {
   sensitivityValue: document.getElementById("sensitivityValue"),
   maxResultsSlider: document.getElementById("maxResultsSlider"),
   maxResultsValue: document.getElementById("maxResultsValue"),
-  dataFileInput: document.getElementById("dataFileInput"),
+  // imageUrlInput: document.getElementById("imageUrlInput"),
+  // jsonUrlInput: document.getElementById("jsonUrlInput"),
+  urlButton: document.getElementById("loadUrlButton"),
+  // dataFileInput: document.getElementById("dataFileInput"),
   resultGallery: document.getElementById("resultGallery"),
   loadingOverlay: document.getElementById("loadingOverlay"),
 };
@@ -49,6 +53,8 @@ function initApp() {
     )
     .then((poseData) => {
       appState.poseData = poseData;
+      // Set basepath for images initially
+      appState.basepath = "https://ik.imagekit.io/helenrhall/Thumbnails/";
       console.log(`Preloaded ${poseData.length} poses from URL`);
     })
     .catch((err) => {
@@ -95,8 +101,93 @@ function setupEventListeners() {
     appState.poseMatcher.setMaxResults(appState.maxResults);
   });
 
+  // URL button - loads pose data from a URL added
+  document.getElementById("loadUrlButton").addEventListener("click", () => {
+    const imageUrl = document.getElementById("imageUrlInput").value.trim();
+    const jsonUrl = document.getElementById("jsonUrlInput").value.trim();
+    const errorMessage = document.getElementById("urlErrorMessage");
+
+    if (!imageUrl || !jsonUrl) {
+      errorMessage.textContent =
+        "Please enter both an image URL and a JSON URL.";
+      return;
+    }
+
+    errorMessage.textContent = ""; // Clear error
+    console.log("Image URL:", imageUrl);
+    console.log("JSON URL:", jsonUrl);
+    // now actually load the pose
+    toggleLoading(true);
+    appState.dataLoader
+      .loadFromUrl(jsonUrl)
+      .then((poseData) => {
+        appState.poseData = poseData;
+
+        console.log(`Loaded ${poseData.length} poses from URL`);
+        // Clear any previous results
+        clearResults();
+        toggleLoading(false);
+        // check if len of poseData is 0
+        if (poseData.length === 0) {
+          alert("No poses found in the provided JSON URL.");
+          return;
+        }
+        // Notify user of successful load
+        //when works then need to get the image link
+        //start by just checking if the image link is valid
+        //have to get first image from the poseData
+        const firstPose = poseData[0];
+        const firstPoseImage = imageUrl + firstPose.filename;
+        const img = new Image();
+        img.src = firstPoseImage;
+        img.onload = () => {
+          console.log("Image loaded successfully:", firstPoseImage);
+          // set as basepath
+          appState.basepath = imageUrl;
+          console.log("Basepath set to:", appState.basepath);
+        };
+        img.onerror = () => {
+          console.error("Error loading image:", firstPoseImage);
+          alert(
+            "Error loading image. Please check the image URL and try again."
+          );
+        };
+        // const img = new Image();
+        alert(`Successfully loaded ${poseData.length} poses from URL.`);
+      })
+      .catch((error) => {
+        console.error("Error loading pose data from URL:", error);
+        toggleLoading(false);
+        alert(
+          "Error loading pose data. Please check the JSON URL and try again."
+        );
+      });
+  });
+  // console.log(image_url.value, json_url.value);
+  // if (!image_url || !json_url) {
+  //   alert("Please enter both image URL and JSON URL.");
+  //   console.error(
+  //     image_url.value,
+  //     json_url.value,
+  //     "Image or JSON URL is empty."
+  //   );
+  //   return;
+  // }
+  //   //else they're there need to load pose
+  //   toggleLoading(true);
+  //   appState.dataLoader.loadFromUrl(json_url.value).then((poseData) => {
+  //     appState.poseData = poseData;
+  //     console.log(`Loaded ${poseData.length} poses from URL`);
+  //     // Clear any previous results
+  //     clearResults();
+  //     toggleLoading(false);
+  //     // Notify user of successful load
+  //     alert(`Successfully loaded ${poseData.length} poses from URL.`);
+  //   });
+  // });
+
   // File input - allows uploading custom MoveNet data
-  elements.dataFileInput.addEventListener("change", handleFileUpload);
+  // elements.dataFileInput.addEventListener("change", handleFileUpload);
 }
 
 //File upload - will use dataLoader to load the file but fun UI
@@ -172,7 +263,8 @@ function displayResults() {
     //add image
     const imgElement = document.createElement("img");
     // basepath = "https://ik.imagekit.io/helenrhall/Thumbnails/";
-    basepath = "https://ik.imagekit.io/helenrhall/YUAG_Results_2/";
+    // basepath = "https://ik.imagekit.io/helenrhall/YUAG_Results_2/";
+    basepath = appState.basepath;
 
     imgElement.src = basepath + result.filename;
     imgElement.className = "pose-image";

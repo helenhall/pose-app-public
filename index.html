@@ -48,10 +48,20 @@
         </div>
 
         <div class="file-upload">
-          <label for="dataFileInput"
-            >Upload your own custom pose data (JSON):</label
+          <label for="imageUrlInput"
+            >Image Database URL:
+            https://ik.imagekit.io/{your_username}/{your_db_name}/</label
           >
-          <input type="file" id="dataFileInput" accept=".json" />
+          <input type="text" id="imageUrlInput" placeholder="Enter image URL" />
+
+          <label for="jsonUrlInput"
+            >JSON URL:
+            https://ik.imagekit.io/{your_username}/{your_file}.json</label
+          >
+          <input type="text" id="jsonUrlInput" placeholder="Enter JSON URL" />
+
+          <button id="loadUrlButton">Load</button>
+          <div id="urlErrorMessage" style="color: red"></div>
         </div>
       </div>
 

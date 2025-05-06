@@ -56,6 +56,22 @@ class DataLoader {
   }
 
   /**
+   * Load data from a given URL (JSON file)
+   * @param {String} url - URL to the JSON file
+   * @returns {Promise} - Promise resolving to the loaded data
+   */
+  async loadFromUrl(url) {
+    try {
+      const response = await fetch(url);
+      const jsonData = await response.json();
+      this.processData(jsonData);
+      return this.poseData;
+    } catch (error) {
+      console.error("Error loading pose data from URL:", error);
+      return [];
+    }
+  }
+  /**
    * Process data into a format usable by the app
    * @param {Object} data - Raw JSON data
    */

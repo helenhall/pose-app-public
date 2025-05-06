@@ -41,8 +41,21 @@ function initApp() {
   appState.poseMatcher = new PoseMatcher();
 
   // Set initial pose data (sample data from DataLoader before user uploads)
-  appState.poseData = appState.dataLoader.sampleData;
-
+  // appState.poseData = appState.dataLoader.sampleData;
+  toggleLoading(true);
+  appState.dataLoader
+    .loadFromUrl(
+      "https://ik.imagekit.io/hrh24/full-size-detected.json?updatedAt=1746561024239"
+    )
+    .then((poseData) => {
+      appState.poseData = poseData;
+      console.log(`Preloaded ${poseData.length} poses from URL`);
+    })
+    .catch((err) => {
+      console.warn("Using fallback sample data due to load error:", err);
+      appState.poseData = appState.dataLoader.sampleData;
+    });
+  // toggleLoading(false);
   // appState.poseData = appState.dataLoader.loadFromFile(
   //   "../data/full-size-detected.json"
   // );

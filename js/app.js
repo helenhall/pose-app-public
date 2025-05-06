@@ -2,6 +2,9 @@
  * app.js - main js file
  */
 
+// adding for carousel
+let currentImageIndex = 0;
+
 // Application state
 const appState = {
   stickFigure: null,
@@ -67,6 +70,7 @@ function initApp() {
   // );
   // Set up event listeners
   setupEventListeners();
+  setupModalEventListeners();
 
   // Hide loading overlay initially
   toggleLoading(false);
@@ -244,8 +248,7 @@ function findSimilarPoses() {
   }
 }
 
-//Display Results - displays the similar poses found in the results gallery
-// This function is called after finding similar poses
+//updated display results
 function displayResults() {
   clearResults();
 
@@ -256,26 +259,22 @@ function displayResults() {
   }
 
   appState.similarPoses.forEach((result, index) => {
-    // Create result container
     const resultItem = document.createElement("div");
     resultItem.className = "result-item";
 
-    //add image
     const imgElement = document.createElement("img");
-    // basepath = "https://ik.imagekit.io/helenrhall/Thumbnails/";
-    // basepath = "https://ik.imagekit.io/helenrhall/YUAG_Results_2/";
-    basepath = appState.basepath;
+    const basepath = appState.basepath;
+    const fullImageSrc = basepath + result.filename;
 
-    imgElement.src = basepath + result.filename;
+    imgElement.src = fullImageSrc;
     imgElement.className = "pose-image";
-    resultItem.appendChild(imgElement);
-    // Create small canvas for this result
-    // const resultCanvas = document.createElement("canvas");
-    // resultCanvas.width = 150;
-    // resultCanvas.height = 150;
-    // resultItem.appendChild(resultCanvas);
+    imgElement.style.cursor = "pointer";
 
-    // Add similarity score
+    // Open modal on click
+    imgElement.addEventListener("click", () => openModal(index));
+
+    resultItem.appendChild(imgElement);
+
     const scoreElement = document.createElement("div");
     scoreElement.className = "similarity-score";
     scoreElement.textContent = `Similarity: ${Math.round(
@@ -283,19 +282,66 @@ function displayResults() {
     )}%`;
     resultItem.appendChild(scoreElement);
 
-    // Add filename
     const filenameElement = document.createElement("div");
     filenameElement.className = "pose-filename";
     filenameElement.textContent = result.filename || `Pose #${index + 1}`;
     resultItem.appendChild(filenameElement);
 
-    // Add to gallery
     elements.resultGallery.appendChild(resultItem);
-
-    // Draw stick figure on this canvas
-    // drawPoseOnCanvas(resultCanvas, result.keypoints);
   });
 }
+//Display Results - displays the similar poses found in the results gallery
+// This function is called after finding similar poses
+// function displayResults() {
+//   clearResults();
+
+//   if (appState.similarPoses.length === 0) {
+//     elements.resultGallery.innerHTML =
+//       '<div class="no-results">No similar poses found. Try adjusting the similarity threshold.</div>';
+//     return;
+//   }
+
+//   appState.similarPoses.forEach((result, index) => {
+//     // Create result container
+//     const resultItem = document.createElement("div");
+//     resultItem.className = "result-item";
+
+//     //add image
+//     const imgElement = document.createElement("img");
+//     // basepath = "https://ik.imagekit.io/helenrhall/Thumbnails/";
+//     // basepath = "https://ik.imagekit.io/helenrhall/YUAG_Results_2/";
+//     basepath = appState.basepath;
+
+//     imgElement.src = basepath + result.filename;
+//     imgElement.className = "pose-image";
+//     resultItem.appendChild(imgElement);
+//     // Create small canvas for this result
+//     // const resultCanvas = document.createElement("canvas");
+//     // resultCanvas.width = 150;
+//     // resultCanvas.height = 150;
+//     // resultItem.appendChild(resultCanvas);
+
+//     // Add similarity score
+//     const scoreElement = document.createElement("div");
+//     scoreElement.className = "similarity-score";
+//     scoreElement.textContent = `Similarity: ${Math.round(
+//       result.similarity * 100
+//     )}%`;
+//     resultItem.appendChild(scoreElement);
+
+//     // Add filename
+//     const filenameElement = document.createElement("div");
+//     filenameElement.className = "pose-filename";
+//     filenameElement.textContent = result.filename || `Pose #${index + 1}`;
+//     resultItem.appendChild(filenameElement);
+
+//     // Add to gallery
+//     elements.resultGallery.appendChild(resultItem);
+
+//     // Draw stick figure on this canvas
+//     // drawPoseOnCanvas(resultCanvas, result.keypoints);
+//   });
+// }
 // Draw Pose on Canvas - draws the stick figure on the canvas
 function drawPoseOnCanvas(canvas, keypoints) {
   const ctx = canvas.getContext("2d");
@@ -375,6 +421,104 @@ function clearResults() {
 function toggleLoading(isLoading) {
   appState.isLoading = isLoading;
   elements.loadingOverlay.style.display = isLoading ? "flex" : "none";
+}
+
+// adding modal things:
+// Modal functionality
+
+// Open the modal with a specific image
+function openModal(index) {
+  const modal = document.getElementById("imageModal");
+  const modalImg = document.getElementById("modalImage");
+  const captionText = document.getElementById("modalCaption");
+
+  // Set the current image index
+  currentImageIndex = index;
+
+  // Get the selected pose result
+  const selectedPose = appState.similarPoses[index];
+
+  // Set the image source and caption
+  modalImg.src = appState.basepath + selectedPose.filename;
+  captionText.textContent = `${
+    selectedPose.filename
+  } - Similarity: ${Math.round(selectedPose.similarity * 100)}%`;
+
+  // Display the modal
+  modal.style.display = "block";
+
+  // Update navigation buttons visibility
+  updateNavigationButtons();
+}
+
+// Close the modal
+function closeModal() {
+  const modal = document.getElementById("imageModal");
+  modal.style.display = "none";
+}
+
+// Navigate to the previous image
+function showPreviousImage() {
+  if (currentImageIndex > 0) {
+    currentImageIndex--;
+    openModal(currentImageIndex);
+  }
+}
+
+// Navigate to the next image
+function showNextImage() {
+  if (currentImageIndex < appState.similarPoses.length - 1) {
+    currentImageIndex++;
+    openModal(currentImageIndex);
+  }
+}
+
+// Update the visibility of navigation buttons based on current position
+function updateNavigationButtons() {
+  const prevButton = document.getElementById("prevImage");
+  const nextButton = document.getElementById("nextImage");
+
+  // Hide or show previous button
+  prevButton.style.visibility = currentImageIndex > 0 ? "visible" : "hidden";
+
+  // Hide or show next button
+  nextButton.style.visibility =
+    currentImageIndex < appState.similarPoses.length - 1 ? "visible" : "hidden";
+}
+
+// Set up modal event listeners
+function setupModalEventListeners() {
+  // Close button event listener
+  document.getElementById("closeModal").addEventListener("click", closeModal);
+
+  // Previous button event listener
+  document
+    .getElementById("prevImage")
+    .addEventListener("click", showPreviousImage);
+
+  // Next button event listener
+  document.getElementById("nextImage").addEventListener("click", showNextImage);
+
+  // Close modal when clicking outside the image
+  window.addEventListener("click", (event) => {
+    const modal = document.getElementById("imageModal");
+    if (event.target === modal) {
+      closeModal();
+    }
+  });
+
+  // Keyboard navigation
+  document.addEventListener("keydown", (event) => {
+    if (document.getElementById("imageModal").style.display === "block") {
+      if (event.key === "ArrowLeft") {
+        showPreviousImage();
+      } else if (event.key === "ArrowRight") {
+        showNextImage();
+      } else if (event.key === "Escape") {
+        closeModal();
+      }
+    }
+  });
 }
 
 // Initialize the application when the page loads
